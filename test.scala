@@ -3,15 +3,9 @@
   */
 
 
-
-
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import scala.util.parsing.json._
-import org.apache.spark.rdd.RDD
-import scala.io.Source
-//import scala.collection.mutable.Map
-
 
 
 object Sentiment {
@@ -19,7 +13,7 @@ object Sentiment {
   var sentiMap = collection.mutable.Map[String, String]()
 
   def main(arg: Array[String]): Unit = {
-    test(Array("fei_fan_first20.txt", "AFINN-111.txt"))
+    test(Array("shortTwitter.txt", "AFINN-111.txt"))
   }
 
   def wordStandize(word: String): String = {
@@ -38,18 +32,8 @@ object Sentiment {
     return java.net.URLEncoder.encode(word.replaceAll("\\p{C}", ""), "utf-8")
   }
 
-  def getRate(line: String): Int = {
-    val words:Array[String] = line.split(" ")
-    var rate = 0
-    for ( word <- words ) {
-      rate += sentiMap.getOrElse(wordStandize(word), "0").toInt
-    }
-    return rate
-  }
-
 
   def test(arg: Array[String]) {
-
 
     val sparkConf = new SparkConf().setAppName("Sentiment_score").setMaster("local[1]")
     val sc = new SparkContext(sparkConf)
@@ -57,41 +41,26 @@ object Sentiment {
     val textTwitter = sc.textFile(arg(0))
     val textAFINN = sc.textFile(arg(1))
 
-
     for (line <- textAFINN) {
       val tokens = line.split("\t")
       sentiMap(tokens(0).trim) = tokens(1).trim
-
     }
-
-
-    //sentiMap.foreach(println)
-
 
 
     val lines = textTwitter
       .flatMap(line=>JSON.parseFull(line).get.asInstanceOf[Map[String,String]].get("text"))
+      .map(line=>{
+        line
+          .split(" ")
+          .map(word=>sentiMap.getOrElse(toUTF(wordStandize(word)), "0").toInt)
+          .reduce(_ + _)
+      })
+      .zipWithIndex()
+      .map(input=>(input._2 + 1, input._1))
 
-    for( (line, index) <- lines.zipWithIndex()) {
-      println(index + 1, getRate(line))
-    }
-        //.map(line =>  getRate(line))
+    //lines.foreach(println)
 
-
-    //.map(line=>line.split(" ").toString().toLowerCase().map(lowerWord=>sentiMap.getOrElse(lowerWord.toString(),"0")))
-
-
-
- //   println(counts)
-
-    //words.foreach(println)
-
-
-    //val aaa = JSON.parseFull()
-
-    //val text = scala.io.Source.fromFile(arg(0), "UTF-8").toString().toLowerCase().split(" ").map(word => (word, 1))
-
-   // counts.saveAsTextFile("testsave.txt")
+    lines.saveAsTextFile("testsave.txt")
 
 
 
