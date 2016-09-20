@@ -27,17 +27,25 @@ object Sentiment {
     val trimedWord = word.trim
     val firstChar = trimedWord.charAt(0)
     if (firstChar == '@' || firstChar == '#')
-      return "   "
+      return ""
     var lowerWord = trimedWord.toLowerCase
-    if (lowerWord.contains("://") || lowerWord.contains("rt@"))
-      return  "   "
+    if (lowerWord.contains("://") || lowerWord.contains("rt@") || lowerWord == "rt")
+      return  ""
     while (lowerWord.length() > 0) {
-      if (lowerWord.charAt(lowerWord.length() - 1) > 'z' || lowerWord.charAt(lowerWord.length() - 1) < 'a') {
-        lowerWord = lowerWord.substring(0, lowerWord.length() - 1)
-      }
-      else {
+      if (lowerWord.charAt(lowerWord.length() - 1) <= 'z' && lowerWord.charAt(lowerWord.length() - 1) >= 'a' && lowerWord.charAt(0) <= 'z' && lowerWord.charAt(0) >= 'a') {
         return lowerWord
       }
+      else {
+        if (lowerWord.charAt(lowerWord.length() - 1) > 'z' || lowerWord.charAt(lowerWord.length() - 1) < 'a') {
+          lowerWord = lowerWord.substring(0, lowerWord.length() - 1)
+        }
+        if (lowerWord.length == 0)
+          return lowerWord
+        if (lowerWord.charAt(0) > 'z' || lowerWord.charAt(0) < 'a') {
+          lowerWord = lowerWord.substring(1, lowerWord.length())
+        }
+      }
+
 
     }
     return lowerWord
@@ -78,8 +86,8 @@ object Sentiment {
     val lines = textTwitter
       .flatMap(line=>JSON.parseFull(line).get.asInstanceOf[Map[String,String]].get("text"))
 
-    for( (word, index) <- lines.zipWithIndex()) {
-      println(index + 1, getRate(word))
+    for( (line, index) <- lines.zipWithIndex()) {
+      println(index + 1, getRate(line))
     }
         //.map(line =>  getRate(line))
 
