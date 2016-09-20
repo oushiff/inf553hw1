@@ -13,7 +13,7 @@ object TFDF {
   // var tempTextFile = RDD
 
   def main(arg: Array[String]): Unit = {
-    test(Array("fei_fan_first20.txt","fewfw"))
+    test(Array("shortTwitter.txt","fewfw"))
   }
 
 
@@ -25,26 +25,13 @@ object TFDF {
     var lowerWord = trimedWord.toLowerCase
     if (lowerWord.contains("://") || lowerWord.contains("rt@") || lowerWord == "rt")
       return  ""
-    while (lowerWord.length() > 0) {
-      if (lowerWord.charAt(lowerWord.length() - 1) <= 'z' && lowerWord.charAt(lowerWord.length() - 1) >= 'a' && lowerWord.charAt(0) <= 'z' && lowerWord.charAt(0) >= 'a') {
-        return lowerWord
-      }
-      else {
-        if (lowerWord.charAt(lowerWord.length() - 1) > 'z' || lowerWord.charAt(lowerWord.length() - 1) < 'a') {
-          lowerWord = lowerWord.substring(0, lowerWord.length() - 1)
-        }
-        if (lowerWord.length == 0)
-          return lowerWord
-        if (lowerWord.charAt(0) > 'z' || lowerWord.charAt(0) < 'a') {
-          lowerWord = lowerWord.substring(1, lowerWord.length())
-        }
-      }
 
-
-    }
-    return lowerWord
+    return """^\W+|\W+$""".r replaceAllIn(lowerWord, "")
   }
 
+  def toUTF (word: String): String = {
+    return java.net.URLEncoder.encode(word.replaceAll("\\p{C}", ""), "utf-8")
+  }
 
   //  def getTF(line: String): Unit = {
   //    val words:Array[String] = line.split(" ")
@@ -94,12 +81,14 @@ object TFDF {
       .zipWithIndex()
       .flatMap ( input => {
         input._1.split(" ")
-          .map(word => ((wordStandize(word),input._2+1),1))
+          .map(word => ((toUTF(wordStandize(word)),input._2+1),1))
       } )
+      .filter(input=>input._1._1.length > 0)
       .reduceByKey(_ + _)
       .map(input => (input._1._1, Array((input._1._2, input._2))))
       .reduceByKey(_ ++ _)
-      .map(input=>(input._1, input._2.toList))
+      .map(input=>(input._1, input._2.length, input._2.toList.sorted))
+      .sortBy(r=>r._1)
 
     //.map(word=>wordStandize(word))
 

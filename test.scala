@@ -22,7 +22,6 @@ object Sentiment {
     test(Array("fei_fan_first20.txt", "AFINN-111.txt"))
   }
 
-
   def wordStandize(word: String): String = {
     val trimedWord = word.trim
     val firstChar = trimedWord.charAt(0)
@@ -31,26 +30,13 @@ object Sentiment {
     var lowerWord = trimedWord.toLowerCase
     if (lowerWord.contains("://") || lowerWord.contains("rt@") || lowerWord == "rt")
       return  ""
-    while (lowerWord.length() > 0) {
-      if (lowerWord.charAt(lowerWord.length() - 1) <= 'z' && lowerWord.charAt(lowerWord.length() - 1) >= 'a' && lowerWord.charAt(0) <= 'z' && lowerWord.charAt(0) >= 'a') {
-        return lowerWord
-      }
-      else {
-        if (lowerWord.charAt(lowerWord.length() - 1) > 'z' || lowerWord.charAt(lowerWord.length() - 1) < 'a') {
-          lowerWord = lowerWord.substring(0, lowerWord.length() - 1)
-        }
-        if (lowerWord.length == 0)
-          return lowerWord
-        if (lowerWord.charAt(0) > 'z' || lowerWord.charAt(0) < 'a') {
-          lowerWord = lowerWord.substring(1, lowerWord.length())
-        }
-      }
 
-
-    }
-    return lowerWord
+    return """^\W+|\W+$""".r replaceAllIn(lowerWord, "")
   }
 
+  def toUTF (word: String): String = {
+    return java.net.URLEncoder.encode(word.replaceAll("\\p{C}", ""), "utf-8")
+  }
 
   def getRate(line: String): Int = {
     val words:Array[String] = line.split(" ")
